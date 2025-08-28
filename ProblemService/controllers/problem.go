@@ -5,6 +5,8 @@ import (
 	"leetcode/services"
 	"leetcode/utils"
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type ProblemController struct {
@@ -35,7 +37,7 @@ func (pc *ProblemController) CreateProblem(w http.ResponseWriter, r *http.Reques
 }
 
 func (pc *ProblemController) GetProblem(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
+	id := chi.URLParam(r, "id")
 
 	problem, err := pc.ProblemService.GetProblem(id)
 	if err != nil {
@@ -47,7 +49,7 @@ func (pc *ProblemController) GetProblem(w http.ResponseWriter, r *http.Request) 
 }
 
 func (pc *ProblemController) UpdateProblem(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
+	id := chi.URLParam(r, "id")
 	var problem models.Problem
 	if err := utils.ReadJSONRequest(r, &problem); err != nil {
 		utils.WriteErrorJSONResponse(w, "Invalid request payload", http.StatusBadRequest)
@@ -64,7 +66,7 @@ func (pc *ProblemController) UpdateProblem(w http.ResponseWriter, r *http.Reques
 }
 
 func (pc *ProblemController) DeleteProblem(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
+	id := chi.URLParam(r, "id")
 
 	if err := pc.ProblemService.DeleteProblem(id); err != nil {
 		utils.WriteErrorJSONResponse(w, "Error deleting problem", http.StatusInternalServerError)
@@ -85,7 +87,7 @@ func (pc *ProblemController) GetAllProblems(w http.ResponseWriter, r *http.Reque
 }
 
 func (pc *ProblemController) SearchProblems(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Query().Get("query")
+	query := chi.URLParam(r, "query")
 
 	problems, err := pc.ProblemService.SearchProblem(query)
 	if err != nil {

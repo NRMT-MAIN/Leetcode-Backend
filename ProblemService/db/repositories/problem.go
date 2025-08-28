@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"leetcode/dtos"
 	"leetcode/models"
+	"reflect"
+	"time"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -37,17 +40,19 @@ func (r *ProblemRepositoryImpl) CreateProblem(problem *models.Problem) (*dtos.Pr
 		return nil, err
 	}
 
+
 	return &dtos.ProblemResponse{
-		Id :          result.InsertedID.(primitive.ObjectID).Hex(),
-		Title:      problem.Title,
-		Description: problem.Description,
-		Editorial:   problem.Editorial,
+		Id:          result.InsertedID.(primitive.ObjectID).Hex(),
+		Title:      *problem.Title,
+		Description: *problem.Description,
+		Editorial:   *problem.Editorial,
 		CreatedAt:   result.InsertedID.(primitive.ObjectID).Timestamp().String(),
 		UpdatedAt:   result.InsertedID.(primitive.ObjectID).Timestamp().String(),
 	}, nil
 }
 
 func (r *ProblemRepositoryImpl) GetProblemById(id string) (*dtos.ProblemResponse, error) {
+	fmt.Println("Fetching problem with id:", id)
 	objId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		fmt.Println("Error converting id to ObjectID:", err)
@@ -61,7 +66,7 @@ func (r *ProblemRepositoryImpl) GetProblemById(id string) (*dtos.ProblemResponse
 		fmt.Println("Error finding problem:", err)
 		return nil, err
 	}
-	return problem, nil
+	return problem , nil
 }
 
 func (r *ProblemRepositoryImpl) UpdateProblem(id string, problem *models.Problem) (*dtos.ProblemResponse, error) {
@@ -71,21 +76,34 @@ func (r *ProblemRepositoryImpl) UpdateProblem(id string, problem *models.Problem
 		return nil, err
 	}
 
-	updatedResult, err := r.collection.UpdateOne(context.TODO(), bson.M{"_id": objId}, bson.M{"$set": problem})
+	update := bson.M{}
+    val := reflect.ValueOf(problem).Elem()
+    typ := val.Type()
+
+    for i := 0; i < val.NumField(); i++ {
+        field := val.Field(i)
+        if !field.IsNil() {
+            bsonTag := typ.Field(i).Tag.Get("bson")
+            if bsonTag != "" {
+                update[bsonTag] = field.Interface()
+            }
+        }
+    }
+	update["updated_at"] = time.Now().String()
+	_, err = r.collection.UpdateOne(context.TODO(), bson.M{"_id": objId}, bson.M{"$set": update})
 	if err != nil {
 		fmt.Println("Error updating problem:", err)
 		return nil, err
 	}
 
-
 	fmt.Println("Problem updated successfully")
-	return &dtos.ProblemResponse{
-		Id:         updatedResult.UpsertedID.(primitive.ObjectID).Hex(),
-		Title:      problem.Title,
-		Description: problem.Description,
-		Editorial:   problem.Editorial,
-		CreatedAt:   updatedResult.UpsertedID.(primitive.ObjectID).Timestamp().String(),
-		UpdatedAt:   updatedResult.UpsertedID.(primitive.ObjectID).Timestamp().String(),
+	 return &dtos.ProblemResponse{
+		Id:          objId.Hex(), //TODO : Add proper respose structure , created and updated at
+		Title:      "Title Updated",
+		Description: "Description Updated",
+		Editorial:   "Editorial Updated",
+		CreatedAt:   time.Now().String(),
+		UpdatedAt:   time.Now().String(),
 	}, nil
 }
 

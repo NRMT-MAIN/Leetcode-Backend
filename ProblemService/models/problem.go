@@ -11,10 +11,10 @@ const (
 )
 
 type Problem struct {
-	Title       string				 `json:"title" bson:"title"`
-	Description string                `json:"description" bson:"description"`
-	Difficulty  Status                `json:"difficulty" bson:"difficulty"`
-	Editorial   string                `json:"editorial" bson:"editorial"`
-	CreatedAt   primitive.Timestamp   `json:"created_at" bson:"created_at"`
-	UpdatedAt   primitive.Timestamp   `json:"updated_at" bson:"updated_at"`
+	Title       *string				 `json:"title,omitempty" bson:"title"`
+	Description *string                `json:"description,omitempty" bson:"description"`
+	Difficulty  *Status                `json:"difficulty,omitempty" bson:"difficulty"`
+	Editorial   *string                `json:"editorial,omitempty" bson:"editorial"`
+	CreatedAt   *primitive.Timestamp   `json:"created_at,omitempty" bson:"created_at"`
+	UpdatedAt   *primitive.Timestamp   `json:"updated_at,omitempty" bson:"updated_at"`
 }
