@@ -153,6 +153,19 @@ func (r *ProblemRepositoryImpl) SearchProblem(query string) ([]*dtos.ProblemResp
 			{Key: "$search", Value: query},
 		}},
 	}
+	//TODO --> Not Working , Creating Indexes left
+	_, err := r.collection.Indexes().CreateOne(context.TODO(), mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "title", Value: "text"},
+			{Key: "description", Value: "text"},
+			{Key: "editorial", Value: "text"},
+		},
+	})
+
+	if err != nil {
+		fmt.Println("Error creating text index:", err)
+		return nil, err
+	}
 
 	curs, err := r.collection.Find(context.TODO(), filter)
 
