@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"leetcode/dtos"
 	"leetcode/models"
+	"leetcode/utils"
 	"reflect"
 	"time"
 
+	"github.com/microcosm-cc/bluemonday"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -33,6 +35,19 @@ func NewProblemRepository(_client *mongo.Client) ProblemRepository {
 }
 
 func (r *ProblemRepositoryImpl) CreateProblem(problem *models.Problem) (*dtos.ProblemResponse, error) {
+	p := bluemonday.NewPolicy()
+
+	// Render the Markdown fields
+	problem.Description = utils.RenderMarkdown(problem.Description)
+	problem.Editorial = utils.RenderMarkdown(problem.Editorial)
+
+	p.AllowElements("h1", "h2", "h3", "p", "ul", "ol", "li", "strong", "em", "code", "pre")
+	p.AllowAttrs("id").OnElements("h1", "h2", "h3", "p", "li")
+	sanitizedDesc := string(p.SanitizeBytes([]byte(*problem.Description)))
+	problem.Description = &sanitizedDesc
+	sanitizedEditorial := string(p.SanitizeBytes([]byte(*problem.Editorial)))
+	problem.Editorial = &sanitizedEditorial
+
 	result, err := r.collection.InsertOne(context.TODO(), problem)
 
 	if err != nil {
@@ -75,6 +90,18 @@ func (r *ProblemRepositoryImpl) UpdateProblem(id string, problem *models.Problem
 		fmt.Println("Error updating problem:", err)
 		return nil, err
 	}
+
+	p := bluemonday.NewPolicy()
+	//Render the Markdown fields
+	problem.Description = utils.RenderMarkdown(problem.Description)
+	problem.Editorial = utils.RenderMarkdown(problem.Editorial)
+
+	p.AllowElements("h1", "h2", "h3", "p", "ul", "ol", "li", "strong", "em", "code", "pre")
+	p.AllowAttrs("id").OnElements("h1", "h2", "h3", "p", "li")
+	sanitizedDesc := string(p.SanitizeBytes([]byte(*problem.Description)))
+	problem.Description = &sanitizedDesc
+	sanitizedEditorial := string(p.SanitizeBytes([]byte(*problem.Editorial)))
+	problem.Editorial = &sanitizedEditorial
 
 	update := bson.M{}
     val := reflect.ValueOf(problem).Elem()
