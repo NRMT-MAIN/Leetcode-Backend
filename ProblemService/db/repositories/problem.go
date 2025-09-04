@@ -3,10 +3,12 @@ package repositories
 import (
 	"context"
 	"fmt"
+	"leetcode/config/env"
 	"leetcode/dtos"
 	"leetcode/models"
 	"reflect"
 	"time"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -27,7 +29,7 @@ type ProblemRepositoryImpl struct {
 
 func NewProblemRepository(_client *mongo.Client) ProblemRepository {
 	return &ProblemRepositoryImpl{
-		collection: _client.Database("Problem").Collection("problems"),
+		collection: _client.Database(env.GetString("MONGO_DBNAME", "Leetcode")).Collection("problems"),
 	}
 }
 
