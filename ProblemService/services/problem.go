@@ -5,6 +5,9 @@ import (
 	"leetcode/db/repositories"
 	"leetcode/dtos"
 	"leetcode/models"
+	"leetcode/utils"
+
+	"github.com/microcosm-cc/bluemonday"
 )
 
 type ProblemService interface {
@@ -27,6 +30,20 @@ func NewProblemService(problemRepository repositories.ProblemRepository) Problem
 }
 
 func (s *ProblemServiceImpl) CreateProblem(problem *models.Problem) (*dtos.ProblemResponse, error) {
+	p := bluemonday.NewPolicy()
+
+	// Render the Markdown fields
+	problem.Description = utils.RenderMarkdown(problem.Description)
+	problem.Editorial = utils.RenderMarkdown(problem.Editorial)
+
+	p.AllowElements("h1", "h2", "h3", "p", "ul", "ol", "li", "strong", "em", "code", "pre")
+	p.AllowAttrs("id").OnElements("h1", "h2", "h3", "p", "li")
+	sanitizedDesc := string(p.SanitizeBytes([]byte(*problem.Description)))
+	problem.Description = &sanitizedDesc
+	sanitizedEditorial := string(p.SanitizeBytes([]byte(*problem.Editorial)))
+	problem.Editorial = &sanitizedEditorial
+
+
 	createdProblem, err := s.ProblemRepository.CreateProblem(problem)
 	if err != nil {
 		fmt.Println("Error creating problem:", err)
@@ -45,6 +62,18 @@ func (s *ProblemServiceImpl) GetProblem(id string) (*dtos.ProblemResponse, error
 }
 
 func (s *ProblemServiceImpl) UpdateProblem(id string, problem *models.Problem) (*dtos.ProblemResponse, error) {
+	p := bluemonday.NewPolicy()
+	//Render the Markdown fields
+	problem.Description = utils.RenderMarkdown(problem.Description)
+	problem.Editorial = utils.RenderMarkdown(problem.Editorial)
+
+	p.AllowElements("h1", "h2", "h3", "p", "ul", "ol", "li", "strong", "em", "code", "pre")
+	p.AllowAttrs("id").OnElements("h1", "h2", "h3", "p", "li")
+	sanitizedDesc := string(p.SanitizeBytes([]byte(*problem.Description)))
+	problem.Description = &sanitizedDesc
+	sanitizedEditorial := string(p.SanitizeBytes([]byte(*problem.Editorial)))
+	problem.Editorial = &sanitizedEditorial
+
 	updatedProblem, err := s.ProblemRepository.UpdateProblem(id, problem)
 	if err != nil {
 		fmt.Println("Error updating problem:", err)
