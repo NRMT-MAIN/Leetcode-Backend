@@ -54,7 +54,6 @@ func (r *SubmissionRepositoryImpl) CreateSubmission(submission *dtos.CreateSubmi
 }
 
 func (r *SubmissionRepositoryImpl) GetSubmissionByID(id string) (*dtos.SubmissionResponse, error) {
-	// Implementation for retrieving a submission by ID from the database
 	var submissionModel models.Submission
 	err := r.collection.FindOne(context.TODO(), bson.M{"_id": id}).Decode(&submissionModel)
 	if err != nil {
