@@ -1,6 +1,7 @@
 package service
 
 import (
+	"Submission_Service/api"
 	"Submission_Service/db/repositories"
 	"Submission_Service/dtos"
 	"fmt"
@@ -19,11 +20,26 @@ type SubmissionServiceImpl struct {
 
 func NewSubmissionService(submissionRepository repositories.SubmissionRepository) SubmissionService {
 	return &SubmissionServiceImpl{
-		SubmissionRepository: &repositories.SubmissionRepositoryImpl{} , 
+		SubmissionRepository: submissionRepository , 
 	}
 }
 
 func (s *SubmissionServiceImpl) CreateSubmission(submission *dtos.CreateSubmissionRequest) (dtos.SubmissionResponse, error) {
+	if submission.Code == nil || submission.Language == nil || submission.ProblemId == nil {
+		return dtos.SubmissionResponse{}, fmt.Errorf("invalid submission data")
+	}
+
+	resp , err := api.GetProblemById(*submission.ProblemId) ; 
+	if err != nil {
+		fmt.Println("Error fetching problem details:", err)
+		return dtos.SubmissionResponse{} , err
+	}
+	if string(resp.Id) == "" {
+		return dtos.SubmissionResponse{} , fmt.Errorf("problem not found with id: %s" , *submission.ProblemId) 
+	}
+
+	fmt.Println("Fetched problem details:", resp.Id , resp.Title) ;
+
 	createdSubmission, err := s.SubmissionRepository.CreateSubmission(submission)
 	if err != nil {
 		fmt.Println("Error creating submission:", err)

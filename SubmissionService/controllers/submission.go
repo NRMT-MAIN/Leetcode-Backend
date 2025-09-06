@@ -17,21 +17,26 @@ func NewSubmissionController(submissionService service.SubmissionService) *Submi
 	}
 }
 
-func (pc *SubmissionController) CreateSubmission(w http.ResponseWriter , r *http.Request) {
-	var submission dtos.CreateSubmissionRequest
+func (pc *SubmissionController) CreateSubmission(w http.ResponseWriter, r *http.Request) {
+    submission := dtos.NewCreateSubmissionRequest()
 
-	if err := utils.ReadJSONRequest(r, &submission); err != nil {
-		utils.WriteJSONResponse(w, http.StatusBadRequest, err.Error())
-		return
-	}
+    if r.Body == nil {
+        utils.WriteJSONResponse(w, http.StatusBadRequest, "Request body is empty")
+        return 
+    }
 
-	createdSubmission, err := pc.SubmissionService.CreateSubmission(&submission)
-	if err != nil {
-		utils.WriteJSONResponse(w, http.StatusInternalServerError, err.Error())
-		return
-	}
+    if err := utils.ReadJSONRequest(r, submission); err != nil {
+        utils.WriteJSONResponse(w, http.StatusBadRequest, err.Error())
+        return
+    }
 
-	utils.WriteJSONResponse(w, http.StatusCreated, createdSubmission)
+    createdSubmission, err := pc.SubmissionService.CreateSubmission(submission)
+    if err != nil {
+        utils.WriteJSONResponse(w, http.StatusInternalServerError, err.Error())
+        return
+    }
+
+    utils.WriteJSONResponse(w, http.StatusCreated, createdSubmission)
 }
 
 func (pc *SubmissionController) GetSubmission(w http.ResponseWriter, r *http.Request) {
@@ -65,7 +70,6 @@ func (pc *SubmissionController) DeleteSubmission(w http.ResponseWriter, r *http.
 	if err != nil {
 		utils.WriteJSONResponse(w, http.StatusInternalServerError, err.Error())
 		return
-	}	
+	}
 	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Submission deleted successfully"})
 }
-
