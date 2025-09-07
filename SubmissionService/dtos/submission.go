@@ -31,3 +31,11 @@ func NewCreateSubmissionRequest() *CreateSubmissionRequest {
         Language:    new(string),
     }
 }
+
+
+type SubmmissionJob struct {
+	SubmissionId string `json:"submission_id"`
+	ProblemId    string `json:"problem_id"`
+	Code         string `json:"code"`
+	Language     string `json:"language"`
+}

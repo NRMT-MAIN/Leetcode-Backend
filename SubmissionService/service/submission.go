@@ -2,8 +2,10 @@ package service
 
 import (
 	"Submission_Service/api"
+	"Submission_Service/config/env"
 	"Submission_Service/db/repositories"
 	"Submission_Service/dtos"
+	"Submission_Service/producers"
 	"fmt"
 )
 
@@ -45,6 +47,23 @@ func (s *SubmissionServiceImpl) CreateSubmission(submission *dtos.CreateSubmissi
 		fmt.Println("Error creating submission:", err)
 		return dtos.SubmissionResponse{} , err
 	}
+
+	job := dtos.SubmmissionJob{
+		SubmissionId: createdSubmission.Id,
+		ProblemId:    *submission.ProblemId,
+		Code:         *submission.Code,
+		Language:    *submission.Language,
+	}
+
+	queueName := env.GetString("SUBMISSION_QUEUE", "SUBMISSION_QUEUE")
+	err = producers.ProduceJob(queueName , job)
+
+	if err != nil {
+		fmt.Println("Error producing job to Redis:", err)
+		return dtos.SubmissionResponse{} , err
+	}
+	fmt.Println("Produced job to Redis queue:", queueName)
+
 	return createdSubmission, nil
 }
 
